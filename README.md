@@ -1,9 +1,9 @@
-An Endless Wave version of survival. However, you will not survive.
+An Endless Wave version of survival. However, you play till yer dead >;)
 
 Changes to normal survival
 
 * Wave spawn types progress as standard but get clamped at X/X difficulty
-* There is no trader time. Kill enemies in wave, current trader closes and new one opens.
+* There is no trader time. Trader is always open. When enemies in wave are killed, current trader closes and new one opens.
 * 5% additional enemies cumulative each wave
 * SpawnTimeMod gets reduced by 5% each wave (clamped to 50% reduction)
 
