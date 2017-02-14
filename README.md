@@ -19,6 +19,6 @@ KFEditor.exe make
 
 To use the new game mode use:
 
-KFGame.exe KF-Outpost?Difficulty=3?game=InfiniteWaves.IWSurvival
+KFEditor.exe KF-Outpost?Difficulty=3?game=InfiniteWaves.IWSurvival -useunpublished
 
 
