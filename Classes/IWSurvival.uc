@@ -14,11 +14,28 @@ var int                   WaveCount;
 var IWKFAISpawnManager   MySpawnManager;
 var array< class<IWKFAISpawnManager> >      IWSpawnManagerClasses;
 
+// How many more Zeds are active any moent
+var float ZedActiveRamping;
+
+// How many more Zeds show up in addition every wave.
+var float MaxZedRamping;
+
+// How rapidly do the Zeds appear?
+var float RateZedRamping;
+
+// Now much time to delay between waves
+var float WaveStartSpawnDelay;
+
 /** Set up the spawning */
 function InitSpawnManager()
 {
 
     MySpawnManager = new(self) IWSpawnManagerClasses[GameLength];
+    MySpawnManager.ZedActiveRamping = ZedActiveRamping;
+    MySpawnManager.MaxZedRamping = MaxZedRamping;
+    MySpawnManager.RateZedRamping = RateZedRamping;
+    MySpawnManager.WaveStartSpawnDelay = WaveStartSpawnDelay;
+
     SpawnManager = MySpawnManager;
     SpawnManager.Initialize();
     WaveMax = SpawnManager.WaveSettings.Waves.Length;
@@ -45,7 +62,7 @@ function StartMatch()
 function StartWave()
 {
     local KFPlayerController KFPC;
-    local KFPlayerReplicationInfo KFPRI;
+    //local KFPlayerReplicationInfo KFPRI;
 
     MySpawnManager.MySetupNextWave(WaveNum);
 
@@ -64,9 +81,9 @@ function StartWave()
     // BroadcastLocalizedMessage(class'KFLocalMessage_Priority', GMT_WaveStart);
 
     // Change Traders
-    MyKFGRI.NextTrader.CloseTrader();
+    MyKFGRI.CloseTrader();
     SetupNextTrader();
-    MyKFGRI.NextTrader.OpenTrader();
+    MyKFGRI.OpenTrader();
 
     if( WorldInfo.NetMode != NM_DedicatedServer && Role == ROLE_Authority )
     {
@@ -80,7 +97,7 @@ function StartWave()
 
             // Now, we override the "FINAL" string with the
             // number of waves the players have survived.
-            KFPRI = KFPlayerReplicationInfo(KFPC.PlayerReplicationInfo);
+            //KFPRI = KFPlayerReplicationInfo(KFPC.PlayerReplicationInfo);
             KFPC.MyGFxHUD.WaveInfoWidget.SetString(
                       "finalText",
                       string(WaveCount)
@@ -90,43 +107,6 @@ function StartWave()
 
     ResetAllPickups();
 }
-
-State EndlessMode
-{
-    function BeginState( Name PreviousStateName )
-    {
-        StartWave();
-    }
-
-    function bool IsWaveActive()
-    {
-        return true;
-    }
-
-    function EndState( Name NextStateName )
-    {
-    }
-
-    function CloseTraderTimer()
-    {
-    }
-}
-
-
-State PlayingWave
-{
-    function BeginState( Name PreviousStateName )
-    {
-        MyKFGRI.SetWaveActive(TRUE, GetGameIntensityForMusic());
-        StartWave();
-    }
-
-    function bool IsWaveActive()
-    {
-        return true;
-    }
-}
-
 
 function WaveEnded(EWaveEndCondition WinCondition)
 {
@@ -144,8 +124,8 @@ function WaveEnded(EWaveEndCondition WinCondition)
         RewardSurvivingPlayers();
         UpdateWaveEndDialogInfo();
 
-        // Start new wave?
-        WaveNum = (WaveNum + 1) % (WaveMax - 1);
+        // Start new wave.
+        WaveNum = Clamp(WaveNum + 1,0,WaveMax-1);
         MyKFGRI.SetWaveActive(TRUE, GetGameIntensityForMusic());
 
         GotoState('CleanupWave');
@@ -154,13 +134,55 @@ function WaveEnded(EWaveEndCondition WinCondition)
     SetTimer( WorldInfo.DeltaSeconds, false, nameOf(Timer_FinalizeEndOfWaveStats) );
 }
 
+
+/***********************************************************************************/
+/***  State: EndlessMode                                                         ***/
+/***********************************************************************************/
+State EndlessMode
+{
+    function BeginState( Name PreviousStateName )
+    {
+        StartWave();
+    }
+
+    function bool IsWaveActive()
+    {
+        return true;
+    }
+
+    function EndState( Name NextStateName ) {}
+
+    function CloseTraderTimer() {}
+}
+
+
+/***********************************************************************************/
+/***  State: PlayingWave                                                         ***/
+/***********************************************************************************/
+State PlayingWave
+{
+    function BeginState( Name PreviousStateName )
+    {
+        MyKFGRI.SetWaveActive(TRUE, GetGameIntensityForMusic());
+        StartWave();
+    }
+
+    function bool IsWaveActive()
+    {
+        return true;
+    }
+}
+
+
+/***********************************************************************************/
+/***  State: CleanupWave                                                         ***/
+/***********************************************************************************/
 State CleanupWave
 {
     function BeginState( Name PreviousStateName )
     {
         local KFPlayerController KFPC;
 
-        // FIXME: Always mid-intensity for music
         MyKFGRI.SetWaveActive(FALSE, GetGameIntensityForMusic());
 
         ForEach WorldInfo.AllControllers(class'KFPlayerController', KFPC)
@@ -175,7 +197,6 @@ State CleanupWave
         // Restart players
         StartHumans();
 
-        // FIXME: Always mid-intensity for music
         MyKFGRI.SetWaveActive(TRUE, GetGameIntensityForMusic());
         GotoState('EndlessMode');
     }
@@ -184,8 +205,28 @@ State CleanupWave
 
 DefaultProperties
 {
+
+    GameReplicationInfoClass = class'InfiniteWaves.IWKFGameReplicationInfo'
+    GameConductorClass = class'InfiniteWaves.IWKFGameConductor'
+
     IWSpawnManagerClasses(0)=class'InfiniteWaves.IWKFAISpawnManager_Short'
     IWSpawnManagerClasses(1)=class'InfiniteWaves.IWKFAISpawnManager_Normal'
     IWSpawnManagerClasses(2)=class'InfiniteWaves.IWKFAISpawnManager_Long'
+
+
+    // Linear ramp increase of Zeds by 10% per wave
+    MaxZedRamping = 0.10
+
+    // Linear ramp increase of active Zeds on map by 2.5% per wave
+    ZedActiveRamping = 0.025
+
+    // Linear ramp increase of Zed spawns by 5% per wave
+    RateZedRamping = 0.05
+
+    // Now much time to delay between waves
+    WaveStartSpawnDelay = 0.f
 }
+
+
+
 
