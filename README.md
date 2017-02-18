@@ -9,8 +9,8 @@ An Endless Wave version of survival. However, you play till yer dead >;)
 Changes to standard survival
 
 * Wave spawn types progress as standard but get clamped at X/X difficulty
-* There is no trader time. Trader is always open. When enemies in wave are killed, current trader closes and new one opens.
-* 10% additional enemies cumulative each wave
+* There is no trader time. Trader is always open. When all zeds in wave are killed, current trader closes and new one opens.
+* 10% additional zeds cumulative each wave
 * 5% increase in allowed active zeds per wave
 * SpawnTimeMod gets reduced by 5% each wave (clamped to 50% reduction)
 * There is no spawn delay when a wave starts
@@ -22,7 +22,7 @@ Download the compiled binary file from here:
 
 https://github.com/amimoto/InfiniteWaves/raw/master/InfiniteWaves.u
 
-This should give you the file ** InfiniteWaves.u **
+This should give you the file **InfiniteWaves.u**
 
 Take the InfiniteWaves.u and drop the file off into:
 
@@ -74,6 +74,7 @@ To use the new game mode or test your changes, use:
  More information can be found below:
  
  https://tripwireinteractive.atlassian.net/wiki/display/KF2SW/KF2+Code+Modding+How-to
+
 
 ## Notes
 
